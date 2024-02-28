@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-
+import bcrypt from "bcryptjs"
+const phoneNumberRegex = /^\d{10}$/;  
 const doctorSchema=mongoose.Schema({
     name:{
         type:String,
@@ -21,7 +22,7 @@ const doctorSchema=mongoose.Schema({
         lowercase:true
     },
     birthDate:{
-        type:Date,
+        type:String,
         required:[true,"please enter your birthdate"]
     },
     age:{
@@ -55,6 +56,7 @@ const doctorSchema=mongoose.Schema({
     },
     experience:{
         type:Number,
+        required:[true,"you should add experience in years"],
         default:0
     },
     doctorRating:{
@@ -77,6 +79,15 @@ const doctorSchema=mongoose.Schema({
         default:0
     },
 
+})
+
+doctorSchema.pre("save",async function(next){
+    if(!this.isModified("password")){
+        next();
+    }
+    this.password=await bcrypt.hash(this.password,10);
+    
+    next();
 })
 
 const Doctor=mongoose.models.Doctor || mongoose.model("Doctor",doctorSchema);

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-
+import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
 const phoneNumberRegex = /^\d{10}$/;  
-
 
 
 const patientSchema=mongoose.Schema({
@@ -25,7 +25,7 @@ const patientSchema=mongoose.Schema({
         lowercase:true
     },
     birthDate:{
-        type:Date,
+        type:String,
         required:[true,"please enter your birthdate"]
     },
     age:{
@@ -95,6 +95,15 @@ const patientSchema=mongoose.Schema({
             default:""
         }
     }
+})
+
+patientSchema.pre("save",async function(next){
+    if(!this.isModified("password")){
+        next();
+    }
+    this.password=await bcrypt.hash(this.password,10);
+    
+    next();
 })
 
 const Patient=mongoose.models.Patient || mongoose.model("Patient",patientSchema);
