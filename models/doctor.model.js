@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs"
+import crypto from "crypto"
 const phoneNumberRegex = /^\d{10}$/;  
 const doctorSchema=mongoose.Schema({
     name:{
@@ -78,6 +79,25 @@ const doctorSchema=mongoose.Schema({
         type:Number,
         default:0
     },
+    patientReview:{
+        type:String
+    },
+    resetPasswordToken:{
+        type:String
+    },
+    resetPasswordExpire:{
+        type:Date
+    },
+    appointmentList:[
+        {
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Patient"
+
+        }
+    ],
+    nextAppointmentTime:{
+        type:String
+    }
 
 })
 
@@ -89,6 +109,13 @@ doctorSchema.pre("save",async function(next){
     
     next();
 })
+
+doctorSchema.methods.getResetToken=async function(){
+    const resetToken=crypto.randomBytes(20).toString("hex")
+    this.resetPasswordToken=crypto.createHash('sha256').update(resetToken).digest("hex");
+    this.resetPasswordExpire=Date.now()+1*60*1000;
+    return resetToken;
+}
 
 const Doctor=mongoose.models.Doctor || mongoose.model("Doctor",doctorSchema);
 export default Doctor;

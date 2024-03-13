@@ -34,8 +34,8 @@ app.use(cors({
     
 }))
 
-app.use("/api/v1",patient)
-app.use("/api/v1",doctor)
+app.use("/api/v1",patient);
+app.use("/api/v1",doctor);
 
 
 

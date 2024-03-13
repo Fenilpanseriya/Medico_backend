@@ -18,7 +18,7 @@ export const isAuthenticated = async (req, _, next) => {
         return next(new ErrorHandler("Not Logged in please login/signup"), 401);
     }
     const extracted = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await Patient.findById(extracted._id);
+    req.user = await Patient.findById(extracted._id) ;
     next();
   } 
   catch (err) {

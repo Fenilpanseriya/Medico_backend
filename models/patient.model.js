@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
 const phoneNumberRegex = /^\d{10}$/;  
-
+import crypto from "crypto"
 
 const patientSchema=mongoose.Schema({
     name:{
@@ -57,7 +56,7 @@ const patientSchema=mongoose.Schema({
         type:String,
         default:""
     },
-    diseases:{
+    diseases:[{
         diseasesName:{
             type:String
         },
@@ -66,7 +65,7 @@ const patientSchema=mongoose.Schema({
             of:String,
             default:[]
         },
-        nextVisittime:{
+        nextVisitTime:{
             type:Date,
         },
         appointmentDate:{
@@ -84,7 +83,7 @@ const patientSchema=mongoose.Schema({
             type:mongoose.Schema.Types.ObjectId,
             ref:"Hospital"
         }
-    },
+    }],
     patientReview:{
         doctorName:{
             type:mongoose.Schema.Types.ObjectId,
@@ -94,7 +93,14 @@ const patientSchema=mongoose.Schema({
             type:String,
             default:""
         }
+    },
+    resetPasswordToken:{
+        type:String
+    },
+    resetPasswordExpire:{
+        type:Date
     }
+
 })
 
 patientSchema.pre("save",async function(next){
@@ -105,6 +111,11 @@ patientSchema.pre("save",async function(next){
     
     next();
 })
-
+patientSchema.methods.getResetToken=async function(){
+    const resetToken=crypto.randomBytes(20).toString("hex")
+    this.resetPasswordToken=crypto.createHash('sha256').update(resetToken).digest("hex");
+    this.resetPasswordExpire=Date.now()+15*60*1000;
+    return resetToken;
+}
 const Patient=mongoose.models.Patient || mongoose.model("Patient",patientSchema);
 export default Patient;
