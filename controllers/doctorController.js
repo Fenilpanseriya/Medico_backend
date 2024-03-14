@@ -172,9 +172,10 @@ export const findDoctor=async(req,res,next)=>{
 
 export  const getDoctorById=async(req,res)=>{
     try {
-        let _id=req.params;
-        _id=new ObjectId(_id);
-        const doctor= await Doctor.find({_id});
+        let id=req.params.id;
+        console.log(typeof id);
+        
+        const doctor= await Doctor.findById(id);
         res.status(200).json({
             success:true,
             doctor
@@ -183,4 +184,8 @@ export  const getDoctorById=async(req,res)=>{
     } catch (error) {
         res.status(400).json(error.message)
     }
+}
+
+export const addPatientReport=async(req,res)=>{
+   
 }
