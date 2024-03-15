@@ -4,6 +4,7 @@ import cors from "cors"
 import cookieParser from "cookie-parser"
 import patient from "./routes/patientRoutes.js"
 import doctor from "./routes/doctorRoutes.js"
+import admin from "./routes/adminRoutes.js"
 import { connectDb } from "./config/connectDB.js";
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use(cors({
 
 app.use("/api/v1",patient);
 app.use("/api/v1",doctor);
+app.use("/api/v1/admin",admin);
 
 
 

@@ -4,16 +4,28 @@ import { comparePassword } from "../utils/comparePassword.js";
 import Doctor from "../models/doctor.model.js";
 import mongoose from "mongoose";
 import {ObjectId}from "mongoose";
+import Hospital from "../models/hospital.model.js";
 
 export const registerDoctor=async(req,res,next)=>{
     try{
-        const {name,email,password,birthDate,age,phoneNumber,gender,photo,experience,doctorAddress,doctorDegree,fees }=req.body;
-        if(!name || !email || !password || !birthDate || !age || !phoneNumber || !gender || !photo || !doctorAddress || !doctorDegree){
+        const {name,email,password,birthDate,age,phoneNumber,gender,photo,experience,doctorAddress,doctorDegree,fees ,hospitalName}=req.body;
+        if(!name || !email || !password || !birthDate || !age || !phoneNumber || !gender || !photo || !doctorAddress || !doctorDegree || !hospitalName){
             return next(new ErrorHandler("please enter all fields "))
         }
         else{
-           const patient=await Doctor.create({name,email,password,birthDate,age,phoneNumber,gender,photo,doctorAddress,experience,doctorDegree,fees})
+            const patient=await Doctor.create({name,email,password,birthDate,age,phoneNumber,gender,photo,doctorAddress,experience,doctorDegree,fees})
+
             if(patient){
+                hospitalName?.forEach((hospital=>{
+
+                    (async()=>{
+                        const {_id}=await Hospital.findOne({hospitalName:hospital})
+                        await patient.hospitalName.push(_id)
+                        await patient.save();
+                    })()
+                    
+                }))
+                
                 return sendToken(res,patient,"Doctror registration successfully",200,next)
             }
             else{
@@ -130,12 +142,25 @@ export const doctorResetPassword=async(req,res,next)=>{
     
 }
 
+export const  findAllDoctor=async(_,res)=>{
+    const response1=await Doctor.find({})
+    return res.status(200).json({
+        success:true,
+        doctors:response1,
+        message:"not found",
+    })
+}
+
 export const findDoctor=async(req,res,next)=>{
     try {
-        console.log("----"+req.body.location)
-        const location= req.query.location?req.query.location:"";
-        const degree= req.query.degree?req.query.degree:"";
+        console.log("----"+req.query.location)
+        const location= req.query.location?req.query.location:"none";
+        const degree= req.query.degree?req.query.degree:"none";
         console.log(location,degree)
+        console.log(typeof location)
+        if(typeof location==="undefined"  && typeof degree==="undefined"){
+            
+        }
         const locationRegex = new RegExp(location, 'i'); 
         const degreeRegex = new RegExp(degree, 'i');
         let response;
