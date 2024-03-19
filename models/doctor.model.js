@@ -95,6 +95,11 @@ const doctorSchema=mongoose.Schema({
 
         }
     ],
+    appointmentSlots: {
+        type: Map,
+        of: [String],
+        default: new Map()
+    },
     nextAppointmentTime:{
         type:String
     }

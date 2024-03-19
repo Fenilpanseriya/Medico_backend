@@ -4,6 +4,8 @@ import { sendToken } from "../utils/sendToken.js";
 import { comparePassword } from "../utils/comparePassword.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto"
+import Doctor from "../models/doctor.model.js";
+import mongoose from "mongoose";
 export const registerPatient=async(req,res,next)=>{
     try{
         const {name,email,password,birthDate,age,phoneNumber,gender,photo,patientAddress}=req.body;
@@ -129,3 +131,92 @@ export const patientResetPassword=async(req,res,next)=>{
     }
     
 }
+
+export const bookAppointment=async(req,res)=>{
+    try {
+        const {email,phoneNumber,id,time,date}=req.body;
+        console.log(email,phoneNumber,id,date);
+        if(!email || !phoneNumber ||!id  || !date){
+            throw new ErrorHandler("please provide all fields",400);  
+        }
+        const patient=await  Patient.findOne({email,phoneNumber});
+        if(!patient){
+            return next(new ErrorHandler("Patient not found.Please enter correct email id"),400);
+        }
+        
+        let len=patient.diseases?.length
+
+        if(len===1){
+            patient.diseases[len-1]={...patient.diseases[len-1],doctor:id,appointmentDate:date,appointmentTime:time}
+            patient.diseases[len]={};
+        }
+        else{
+            
+            patient.diseases[len-1]={doctor:id,appointmentDate:date,appointmentTime:time}
+            patient.diseases[len]={};
+        }
+        
+        await patient.save();
+
+        const doctor=await Doctor.findById("65f428554917cd1c12981a8a")
+        await doctor.appointmentList.push(patient._id);
+
+        if (!doctor.appointmentSlots.has(date)) {
+            doctor.appointmentSlots.set(date, []);
+        }token
+        // Add the time slot to the array for the given date
+        doctor.appointmentSlots.get(date).push(time);
+        doctor.save(); 
+
+        res.status(200).json({
+            success:true,
+            patient,
+            doctor
+        })
+    } 
+    catch (error) {
+        console.log(error)
+        res.status(400).json({
+            success:false,
+            message:error.message
+        })
+    }
+    
+
+
+}
+        
+export const checkSlot=async(req,res)=>{
+    try {
+        const time=req.query.time;
+        const date=req.query.date;
+        const id=req.query.id;
+        console.log(time,date,id)
+        let doctor=await Doctor.findById(id);
+        if(!doctor){
+            return res.status(400).json({
+                available: false,
+                message:"invalid doctor"
+            });
+        }
+        let slots = doctor.appointmentSlots.get(date);
+        if(slots && slots.includes(time)){
+            return res.status(200).json({
+                availabel:false,
+                message:"this slot is not availabel"
+            })
+        }
+        else{
+            return res.status(200).json({
+                availabel:true,
+            })
+        }
+    } 
+    catch (error) {
+        return res.status(400).json({
+            available: false,
+            message: error.message
+        });
+    }
+}
+
