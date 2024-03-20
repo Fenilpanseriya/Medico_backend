@@ -2,6 +2,7 @@ import express from "express"
 import dotenv from "dotenv"
 import cors from "cors"
 import cookieParser from "cookie-parser"
+import bodyParser from "body-parser"
 import patient from "./routes/patientRoutes.js"
 import doctor from "./routes/doctorRoutes.js"
 import admin from "./routes/adminRoutes.js"
@@ -13,7 +14,9 @@ const app=express();
 app.listen(process.env.PORT,()=>{
     console.log("server started at port "+process.env.PORT)
 })
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json())
+app.use(bodyParser.json())
 app.use(express.urlencoded({
     extended:true,
 }))

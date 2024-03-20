@@ -7,10 +7,14 @@ export const isAuthenticated = async (req, _, next) => {
     if (req.headers.token) {
         token = req.headers.token;
     } 
+    else if(req.cookies.token){
+      console.log("fetch cookie")
+      token=req.cookies.token
+    }
     else if (req.params.token) {
         token = req.params.token;
     } 
-    else {
+    else  {
         token = req.query.token;
     }
     console.log("token iss " + token);

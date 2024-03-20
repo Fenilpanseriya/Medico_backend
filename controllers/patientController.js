@@ -8,13 +8,17 @@ import Doctor from "../models/doctor.model.js";
 import mongoose from "mongoose";
 export const registerPatient=async(req,res,next)=>{
     try{
-        const {name,email,password,birthDate,age,phoneNumber,gender,photo,patientAddress}=req.body;
-        if(!name || !email || !password || !birthDate || !age || !phoneNumber || !gender || !photo || !patientAddress){
+        const {name,email,password,birthDate,age,phoneNumber,gender,avatar,address}=req.body;
+        console.log(name,email,password,birthDate,age,phoneNumber,gender,address)
+        if(!name || !email || !password || !birthDate || !age || !phoneNumber || !gender || !avatar || !address){
             return next(new ErrorHandler("please enter all fields "))
         }
         else{
-           
-            const response=await Patient.create({name,email,password,birthDate,age,phoneNumber,gender,photo,patientAddress})
+            let photo={
+                public_id:"temp",
+                url:"temp"
+            }
+            const response=await Patient.create({name,email,password,birthDate,age,phoneNumber,gender,photo,patientAddress:address})
             if(response){
                 return sendToken(res,response,"Patient registration successfully",200,next)
             }
@@ -48,7 +52,7 @@ export const loginPatient=async(req,res,next)=>{
         }
         
 
-        sendToken(res,patient,`welcome back ${patient.name}`,201);
+        sendToken(res,patient,`welcome back ${patient.name}`,200);
     }
     catch(err){
         console.log("error in registration "+err.message)
@@ -158,12 +162,12 @@ export const bookAppointment=async(req,res)=>{
         
         await patient.save();
 
-        const doctor=await Doctor.findById("65f428554917cd1c12981a8a")
+        const doctor=await Doctor.findById(id)
         await doctor.appointmentList.push(patient._id);
 
         if (!doctor.appointmentSlots.has(date)) {
             doctor.appointmentSlots.set(date, []);
-        }token
+        }
         // Add the time slot to the array for the given date
         doctor.appointmentSlots.get(date).push(time);
         doctor.save(); 

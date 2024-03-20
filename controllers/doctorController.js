@@ -13,20 +13,20 @@ export const registerDoctor=async(req,res,next)=>{
             return next(new ErrorHandler("please enter all fields "))
         }
         else{
-            const patient=await Doctor.create({name,email,password,birthDate,age,phoneNumber,gender,photo,doctorAddress,experience,doctorDegree,fees})
+            const doctor=await Doctor.create({name,email,password,birthDate,age,phoneNumber,gender,photo,doctorAddress,experience,doctorDegree,fees})
 
-            if(patient){
+            if(doctor){
                 hospitalName?.forEach((hospital=>{
 
                     (async()=>{
                         const {_id}=await Hospital.findOne({hospitalName:hospital})
-                        await patient.hospitalName.push(_id)
-                        await patient.save();
+                        await doctor.hospitalName.push(_id)
+                        await doctor.save();
                     })()
                     
                 }))
                 
-                return sendToken(res,patient,"Doctror registration successfully",200,next)
+                return sendToken(res,doctor,"Doctror registration successfully",200,next)
             }
             else{
                 return next(new ErrorHandler("please try again. something went wrong"),400)

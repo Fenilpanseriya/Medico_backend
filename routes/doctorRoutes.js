@@ -5,7 +5,7 @@ import { doctorForgetPassword, doctorResetPassword, findAllDoctor, findDoctor, g
 const router=express.Router();
 
 
-router.post("/registerDoctor",registerDoctor).post("/loginDoctor",isAuthenticated,loginDoctor)
+router.post("/registerDoctor",registerDoctor).post("/loginDoctor",loginDoctor)
 router.get("/logoutDoctor",logoutDoctor)
 router.post("/doctorForgetPassword",doctorForgetPassword)
 router.put("/doctorResetPassword/:token",doctorResetPassword)
