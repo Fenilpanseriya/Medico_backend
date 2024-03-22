@@ -223,4 +223,35 @@ export const checkSlot=async(req,res)=>{
         });
     }
 }
+// let idToDoctorName=new Map();
+export const getAllAppointments=async(req,res)=>{
+    try {
+        let patient=await Patient.findById(req.user);
+        if(!patient){
+            throw new ErrorHandler("Invalid Patient",400);  
+        }
+        let appointments = await Promise.all(patient?.diseases?.map(async (item) => {
+            // if (idToDoctorName.has(item.doctor)) {
+            //     console.log("in cache");
+            //     return { ...item, doctor: idToDoctorName[item.doctor] };
+            // } else {
+                let doctorName = await Doctor.findById(item.doctor)
+                //idToDoctorName[item.doctor] = doctorName?.name;
+                return { ...item, doctor: doctorName?.name };
+            //}
+        }));
+        
+        console.log(appointments);
+        return res.status(200).json({
+            success:true,
+            appointments,
+        })
+    } 
+    catch (error) {
+        res.status(400).json({
+            success:false,
+            message:error.message
+        })
+    }
+}
 
