@@ -223,7 +223,7 @@ export const checkSlot=async(req,res)=>{
         });
     }
 }
-// let idToDoctorName=new Map();
+ let idToDoctorName=new Map();
 export const getAllAppointments=async(req,res)=>{
     try {
         let patient=await Patient.findById(req.user);
@@ -231,23 +231,44 @@ export const getAllAppointments=async(req,res)=>{
             throw new ErrorHandler("Invalid Patient",400);  
         }
         let appointments = await Promise.all(patient?.diseases?.map(async (item) => {
-            // if (idToDoctorName.has(item.doctor)) {
-            //     console.log("in cache");
-            //     return { ...item, doctor: idToDoctorName[item.doctor] };
-            // } else {
+            if (idToDoctorName.has(item.doctor)) {
+                console.log("in cache");
+                return { ...item, doctor: idToDoctorName[item.doctor] };
+            } else {
                 let doctorName = await Doctor.findById(item.doctor)
-                //idToDoctorName[item.doctor] = doctorName?.name;
+                idToDoctorName[item.doctor] = doctorName?.name;
                 return { ...item, doctor: doctorName?.name };
-            //}
+            }
         }));
         
         console.log(appointments);
+        appointments=appointments.slice(0,appointments.length-1)
         return res.status(200).json({
             success:true,
-            appointments,
+            count:appointments.length,
+            appointments
         })
     } 
     catch (error) {
+        res.status(400).json({
+            success:false,
+            message:error.message
+        })
+    }
+}
+
+export const getUserInfo=async(req,res)=>{
+    try {
+        const user=await Patient.findById(req.user);
+        if(!user){
+            throw new ErrorHandler("user not found",400);  
+        }
+        let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate};
+        return res.status(200).json({
+            success: true,
+            info
+        })
+    } catch (error) {
         res.status(400).json({
             success:false,
             message:error.message
