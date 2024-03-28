@@ -5,6 +5,7 @@ import Doctor from "../models/doctor.model.js";
 import mongoose from "mongoose";
 import {ObjectId}from "mongoose";
 import Hospital from "../models/hospital.model.js";
+import Patient from "../models/patient.model.js";
 
 export const registerDoctor=async(req,res,next)=>{
     try{
@@ -211,6 +212,47 @@ export  const getDoctorById=async(req,res)=>{
     }
 }
 
-export const addPatientReport=async(req,res)=>{
-   
+export const  fetchTodaysAppointment=async(req,res)=>{
+    try {
+        const date=req.query.date;
+        //console.log(date)
+        if(!date){
+            return next(new ErrorHandler("please enter date"))
+        }
+        //console.log("user is "+req.user)
+        let doctor=await Doctor.findById(req.user);
+        //console.log(doctor)
+
+        let len=doctor?.appointmentSlots[date]?.length
+        let totalAppointment=doctor?.appointmentList?.length
+        let countOfTodaysAppointment=totalAppointment-len;
+        let todaysAppointment=doctor?.appointmentList?.slice(countOfTodaysAppointment,len)
+        //console.log(todaysAppointment)
+
+        let appointmentData=[];
+        
+        for(let i=0;i<todaysAppointment.length;i++){
+            let data={};
+            let patient=await Patient.findById(todaysAppointment[i]);
+            let len=patient?.diseases?.length;
+            data["name"]=patient.name;
+            data["appointmentDate"]=patient.diseases[len-2].appointmentDate
+            data["appointmentTime"]=patient.diseases[len-2].appointmentTime
+            data["diseasesName"]="";
+            data["caseFees"]=0;
+            data["medicines"]=""
+            data["nextVisitTime"]=new Date(Date.now()).toDateString()
+            appointmentData.push(data)
+        }
+
+        console.log(appointmentData)
+
+        return res.status(200).json({
+            appointmentData,
+            success:true
+        })
+    } 
+    catch (error) {
+        res.status(400).json(error.message)
+    }
 }

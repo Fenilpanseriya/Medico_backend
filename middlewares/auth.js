@@ -1,6 +1,7 @@
 import ErrorHandler from "../utils/eroorHandler.js";
 import Patient from "../models/patient.model.js"
 import jwt from "jsonwebtoken"
+import Doctor from "../models/doctor.model.js";
 export const isAuthenticated = async (req, _, next) => {
   try {
     let token;
@@ -22,7 +23,14 @@ export const isAuthenticated = async (req, _, next) => {
         return next(new ErrorHandler("Not Logged in please login/signup"), 401);
     }
     const extracted = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await Patient.findById(extracted._id) ;
+    console.log("role is "+req.query.role)
+    if(req.query.role==="user"){
+      req.user = await Patient.findById(extracted._id) ;
+    }
+    else if(req.query.role==="doctor"){
+      req.user = await Doctor.findById(extracted._id) ;
+    }
+    
     next();
   } 
   catch (err) {

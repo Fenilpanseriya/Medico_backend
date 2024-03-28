@@ -259,16 +259,79 @@ export const getAllAppointments=async(req,res)=>{
 
 export const getUserInfo=async(req,res)=>{
     try {
-        const user=await Patient.findById(req.user);
-        if(!user){
-            throw new ErrorHandler("user not found",400);  
+        const role= req.query.role || "user";
+        if(role==="user"){
+            const user=await Patient.findById(req.user);
+            if(!user){
+                throw new ErrorHandler("user not found",400);  
+            }
+            let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate};
+            return res.status(200).json({
+                success: true,
+                info
+            })
         }
-        let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate};
-        return res.status(200).json({
-            success: true,
-            info
-        })
+        else if(role=== "doctor"){
+            const user=await Doctor.findById(req.user);
+            if(!user){
+                throw new ErrorHandler("user not found",400);  
+            }
+            let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate,experience:user.experience,doctorDegree:user.doctorDegree};
+            return res.status(200).json({
+                success: true,
+                info
+            })
+        }
+        
+        
     } catch (error) {
+        res.status(400).json({
+            success:false,
+            message:error.message
+        })
+    }
+}
+
+
+export const updateProfile=async(req,res)=>{
+    try {
+        const {name,email,phoneNumber,gender,patientAddress,birthDate,experience,doctorDegree}=req.body;
+        const role=req.query.role || "user"
+        console.log(role)
+        if(role==="user"){
+            let updatedUser=await Patient.findById(req.user)
+            updatedUser.name=name;
+            updatedUser.email=email;
+            updatedUser.birthDate=birthDate;
+            updatedUser.gender=gender;
+            updatedUser.phoneNumber=phoneNumber;
+            updatedUser.patientAddress=patientAddress;
+            updatedUser.save();
+        }
+        else if(role==="doctor"){
+            let updatedUser=await Doctor.findById(req.user)
+            console.log(updatedUser)
+            if(updatedUser){
+                updatedUser.name=name;
+                updatedUser.email=email;
+                updatedUser.birthDate=birthDate;
+                updatedUser.gender=gender;
+                updatedUser.phoneNumber=phoneNumber;
+                updatedUser.patientAddress=patientAddress;
+                updatedUser.experience=experience;
+                updatedUser.doctorDegree=doctorDegree
+                updatedUser.save();
+            }
+            
+        }
+       
+        res.status(200).json({
+            success:true,
+            message: "profile has been updated successfully"
+        })
+
+    } catch (error) {
+        console.log("error is "+error.message)
         res.status(400).json({
             success:false,
             message:error.message
