@@ -226,11 +226,13 @@ export const checkSlot=async(req,res)=>{
  let idToDoctorName=new Map();
 export const getAllAppointments=async(req,res)=>{
     try {
+        console.log(req.user)
         let patient=await Patient.findById(req.user);
         if(!patient){
             throw new ErrorHandler("Invalid Patient",400);  
         }
         let appointments = await Promise.all(patient?.diseases?.map(async (item) => {
+            console.log(item)
             if (idToDoctorName.has(item.doctor)) {
                 console.log("in cache");
                 return { ...item, doctor: idToDoctorName[item.doctor] };
@@ -242,7 +244,7 @@ export const getAllAppointments=async(req,res)=>{
         }));
         
         console.log(appointments);
-        appointments=appointments.slice(0,appointments.length-1)
+        appointments=appointments.slice(0,appointments.length-2)
         return res.status(200).json({
             success:true,
             count:appointments.length,

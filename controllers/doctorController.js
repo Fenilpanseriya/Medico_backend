@@ -223,11 +223,14 @@ export const  fetchTodaysAppointment=async(req,res)=>{
         let doctor=await Doctor.findById(req.user);
         //console.log(doctor)
 
-        let len=doctor?.appointmentSlots[date]?.length
+        let len=doctor.appointmentSlots.get(date).length
+        console.log("len is "+len)
         let totalAppointment=doctor?.appointmentList?.length
+        console.log("total appointment len is "+totalAppointment)
         let countOfTodaysAppointment=totalAppointment-len;
-        let todaysAppointment=doctor?.appointmentList?.slice(countOfTodaysAppointment,len)
-        //console.log(todaysAppointment)
+        
+        let todaysAppointment=doctor?.appointmentList?.slice(countOfTodaysAppointment)
+        console.log(todaysAppointment)
 
         let appointmentData=[];
         
@@ -235,17 +238,18 @@ export const  fetchTodaysAppointment=async(req,res)=>{
             let data={};
             let patient=await Patient.findById(todaysAppointment[i]);
             let len=patient?.diseases?.length;
+            data["id"]=patient._id
             data["name"]=patient.name;
             data["appointmentDate"]=patient.diseases[len-2].appointmentDate
             data["appointmentTime"]=patient.diseases[len-2].appointmentTime
             data["diseasesName"]="";
             data["caseFees"]=0;
             data["medicines"]=""
-            data["nextVisitTime"]=new Date(Date.now()).toDateString()
+            data["nextVisitTime"]=""
             appointmentData.push(data)
         }
 
-        console.log(appointmentData)
+        //console.log(appointmentData)
 
         return res.status(200).json({
             appointmentData,
@@ -253,6 +257,35 @@ export const  fetchTodaysAppointment=async(req,res)=>{
         })
     } 
     catch (error) {
+        res.status(400).json(error.message)
+    }
+}
+
+export const doneAppointment=async(req,res)=>{
+    try {
+        const {medicines,diseasesName,caseFees}=req.body;
+
+        if(!medicines || !diseasesName || !caseFees){
+            res.status(400).json({message: "all fields require",status:200})
+        }
+        const  id = req.query.id;
+
+        const patient=await Patient.findById(id);
+        if(!patient){
+            res.status(400).json({message: "No such user found",status:200})
+        }
+        let len=patient?.diseases?.length
+        patient.diseases[len-2].medicines=medicines?medicines.split(","):[]
+        patient.diseases[len-2].diseasesName=diseasesName;
+        patient.diseases[len-2].nextVisitTime=new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)).toDateString();
+        patient.diseases[len-2].caseFees=caseFees
+        await patient.save()
+        console.log(patient)
+        return res.status(200).json({
+            message:"appointment done"
+        })
+    
+    } catch (error) {
         res.status(400).json(error.message)
     }
 }
