@@ -223,28 +223,30 @@ export const checkSlot=async(req,res)=>{
         });
     }
 }
- let idToDoctorName=new Map();
+ let idToDoctorNameMap=new Map();
 export const getAllAppointments=async(req,res)=>{
     try {
-        console.log(req.user)
+        //console.log(req.user)
         let patient=await Patient.findById(req.user);
         if(!patient){
             throw new ErrorHandler("Invalid Patient",400);  
         }
         let appointments = await Promise.all(patient?.diseases?.map(async (item) => {
-            console.log(item)
-            if (idToDoctorName.has(item.doctor)) {
+            //console.log(item)
+            const {doctor,appointmentDate,appointmentTime,caseFees,medicines,nextVisitTime}=item
+            if (idToDoctorNameMap.has(doctor)) {
                 console.log("in cache");
-                return { ...item, doctor: idToDoctorName[item.doctor] };
+                return { appointmentDate,appointmentTime,caseFees,medicines,doctor:idToDoctorNameMap[doctor] };
             } else {
-                let doctorName = await Doctor.findById(item.doctor)
-                idToDoctorName[item.doctor] = doctorName?.name;
-                return { ...item, doctor: doctorName?.name };
+                let doctorName = await Doctor.findById(item.doctor).select("name")
+                idToDoctorNameMap[doctor] = doctorName?.name;
+                return { appointmentDate,appointmentTime,caseFees,medicines,nextVisitTime,doctor:doctorName?.name};
             }
         }));
         
-        console.log(appointments);
-        appointments=appointments.slice(0,appointments.length-2)
+        //console.log(appointments);
+        appointments=appointments.slice(0,appointments.length-1)
+        
         return res.status(200).json({
             success:true,
             count:appointments.length,
@@ -258,7 +260,9 @@ export const getAllAppointments=async(req,res)=>{
         })
     }
 }
-
+//mapbox://styles/fenilpanseriya/clugrhwbp01bh01mjcrz1cu0w
+//pk.eyJ1IjoiZmVuaWxwYW5zZXJpeWEiLCJhIjoiY2x1Z3I4bzF0MHd0ZDJpb2U1cndiYnNhdiJ9.X_QUzVd7Q0t6rclnp3Z8NA  token
+//mapbox://styles/fenilpanseriya/clugrhwbp01bh01mjcrz1cu0w style url
 export const getUserInfo=async(req,res)=>{
     try {
         const role= req.query.role || "user";
