@@ -5,12 +5,14 @@ import { comparePassword } from "../utils/comparePassword.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import crypto from "crypto"
 import Doctor from "../models/doctor.model.js";
-import mongoose from "mongoose";
+import cloudinary from "cloudinary"
+import getDataUri from "../utils/dataUri.js";
 export const registerPatient=async(req,res,next)=>{
     try{
-        const {name,email,password,birthDate,age,phoneNumber,gender,avatar,address}=req.body;
+        const {name,email,password,birthDate,age,phoneNumber,gender,avatar,address,file}=req.body;
         console.log(name,email,password,birthDate,age,phoneNumber,gender,address)
-        if(!name || !email || !password || !birthDate || !age || !phoneNumber || !gender || !avatar || !address){
+
+        if(!name || !email || !password || !birthDate || !age || !phoneNumber || !gender  || !address){
             return next(new ErrorHandler("please enter all fields "))
         }
         else{
@@ -18,7 +20,11 @@ export const registerPatient=async(req,res,next)=>{
                 public_id:"temp",
                 url:"temp"
             }
-            const response=await Patient.create({name,email,password,birthDate,age,phoneNumber,gender,photo,patientAddress:address})
+            const fileUri=getDataUri(file,next);
+            console.log(fileUri);
+            const {public_id,secure_url}=await cloudinary.v2.uploader.upload(fileUri?.content);
+            console.log("public id"+public_id)
+            const response=await Patient.create({photo:{public_id,url:secure_url},name,email,password,birthDate,age,phoneNumber,gender,patientAddress:address})
             if(response){
                 return sendToken(res,response,"Patient registration successfully",200,next)
             }

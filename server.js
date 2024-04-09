@@ -9,9 +9,11 @@ import doctor from "./routes/doctorRoutes.js"
 import admin from "./routes/adminRoutes.js"
 import { connectDb } from "./config/connectDB.js";
 import { Server } from "socket.io"
+import cofigClodinary from "./utils/cloudinary.js";
 dotenv.config();
 
 connectDb();
+await cofigClodinary();
 const app = express();
 
 const io = new Server();
@@ -28,14 +30,22 @@ io.on("connection",(socket)=>{
         socketToEmailMap.set(socket.id,emailId)
         socket.emit("joined-room",{roomId});
         socket.join(roomId);
-        socket.broadcast.to(roomId).emit("user-joined",{emailId})
+        socket.broadcast.to(roomId).emit("user-joined",{emailId,roomId})
+        console.log("hello")
     })
 
     socket.on("call-user",data=>{
-        const {offer,emailId}=data;
+        const {offer,emailId,roomId}=data;
+        console.log(offer)
         const fromEmail=socketToEmailMap.get(socket.id)
         const socketId=emailToSocketMap.get(emailId)
-        socket.to(socketId).emit("incommming-call",{offer,from:fromEmail})
+        socket.to(socketId).emit("incomming-call",{offer,from:fromEmail})
+        
+    })
+    socket.on("call-accepted",data=>{
+        const {ans,emailId}=data;
+        const socketId=emailToSocketMap.get(emailId);
+        socket.to(socketId).emit("call-accepted",ans);
     })
 })
 
