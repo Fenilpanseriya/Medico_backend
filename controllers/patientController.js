@@ -9,7 +9,8 @@ import cloudinary from "cloudinary"
 import getDataUri from "../utils/dataUri.js";
 export const registerPatient=async(req,res,next)=>{
     try{
-        const {name,email,password,birthDate,age,phoneNumber,gender,avatar,address,file}=req.body;
+        const {name,email,password,birthDate,age,phoneNumber,gender,avatar,address}=req.body;
+        const file=req.file
         console.log(name,email,password,birthDate,age,phoneNumber,gender,address)
 
         if(!name || !email || !password || !birthDate || !age || !phoneNumber || !gender  || !address){
@@ -20,10 +21,13 @@ export const registerPatient=async(req,res,next)=>{
                 public_id:"temp",
                 url:"temp"
             }
+            // console.log(file)
             const fileUri=getDataUri(file,next);
-            console.log(fileUri);
-            const {public_id,secure_url}=await cloudinary.v2.uploader.upload(fileUri?.content);
-            console.log("public id"+public_id)
+            //console.log(fileUri);
+            const {public_id,secure_url}=await cloudinary.v2.uploader.upload(fileUri?.content,{
+                resource_type:"auto"
+            });
+            //console.log("public id"+public_id)
             const response=await Patient.create({photo:{public_id,url:secure_url},name,email,password,birthDate,age,phoneNumber,gender,patientAddress:address})
             if(response){
                 return sendToken(res,response,"Patient registration successfully",200,next)
@@ -277,7 +281,7 @@ export const getUserInfo=async(req,res)=>{
             if(!user){
                 throw new ErrorHandler("user not found",400);  
             }
-            let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate};
+            let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate,avatar:user.photo.url};
             return res.status(200).json({
                 success: true,
                 info
@@ -288,7 +292,7 @@ export const getUserInfo=async(req,res)=>{
             if(!user){
                 throw new ErrorHandler("user not found",400);  
             }
-            let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate,experience:user.experience,doctorDegree:user.doctorDegree};
+            let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate,avatar:user.photo.url,experience:user.experience,doctorDegree:user.doctorDegree};
             return res.status(200).json({
                 success: true,
                 info
@@ -351,3 +355,65 @@ export const updateProfile=async(req,res)=>{
     }
 }
 
+export const addReport=async(req,res,next)=>{
+    try {
+        const file=req.file;
+        if(!file){
+            return res.status(400).json({
+                success:false,
+                message:"file not found"
+            })
+
+        }
+        const user=await Patient.findById(req.user);
+        if(!user){
+            return res.status(400).json({
+                message:"user not found"
+            })
+        }
+        const fileUri=getDataUri(file,next);
+        const {public_id,secure_url}=await cloudinary.v2.uploader.upload(fileUri?.content,{
+            resource_type:"auto"
+        });
+        console.log(public_id,secure_url)
+        user?.reports.push({
+            public_id,
+            url:secure_url
+
+        })
+        await user.save()
+        res.status(200).json({
+            success:true,
+            message:"report has been added successfully",
+            reports:user.reports
+
+        })
+
+
+    } catch (error) {
+        return res.status(400).json({
+            success:false,
+            message:error.message
+        })
+
+    }
+}
+
+export const getAllReports=async(req,res,next)=>{
+    try {
+        let user=await Patient.findById(req.user);
+        if(!user){
+            return res.status(200).json({message:"user not found"})
+        }
+        return res.status(200).json({
+            success:true,
+            reports:user.reports
+        })
+    } 
+    catch (error) {
+        return res.status(400).json({
+            success:false,
+            message:error.message
+        })
+    }
+}

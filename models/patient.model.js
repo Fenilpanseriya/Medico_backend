@@ -89,15 +89,16 @@ const patientSchema=mongoose.Schema({
             type:mongoose.Schema.Types.ObjectId,
             ref:"Hospital"
         },
-        reports:[{
-            public_id:{
-                type:String,
-            },
-            url:{
-                type:String
-            }
-    
-        }]
+        
+    }],
+    reports:[{
+        public_id:{
+            type:String,
+        },
+        url:{
+            type:String
+        }
+
     }],
     patientReview:{
         doctorName:{
