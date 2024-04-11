@@ -145,9 +145,17 @@ export const patientResetPassword=async(req,res,next)=>{
     }
     
 }
-
+let isBookingInProgress = false;
 export const bookAppointment=async(req,res)=>{
     try {
+        // Check if appointment booking is in progress
+        if (isBookingInProgress) {
+            throw new ErrorHandler("Appointment booking is in progress. Please try again later.", 400);
+        }
+
+        // Set flag to indicate appointment booking is in progress
+        isBookingInProgress = true;
+
         const {email,phoneNumber,id,time,date}=req.body;
         console.log(email,phoneNumber,id,date);
         if(!email || !phoneNumber ||!id  || !date){
@@ -182,6 +190,9 @@ export const bookAppointment=async(req,res)=>{
         doctor.appointmentSlots.get(date).push(time);
         doctor.save(); 
 
+        // Reset the flag to indicate appointment booking is completed
+        isBookingInProgress = false;
+
         res.status(200).json({
             success:true,
             patient,
@@ -189,6 +200,7 @@ export const bookAppointment=async(req,res)=>{
         })
     } 
     catch (error) {
+        isBookingInProgress = false;
         console.log(error)
         res.status(400).json({
             success:false,

@@ -65,7 +65,7 @@ const adminSchema=mongoose.Schema({
 
 })
 
-patientSchema.pre("save",async function(next){
+adminSchema.pre("save",async function(next){
     if(!this.isModified("password")){
         next();
     }
