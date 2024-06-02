@@ -87,14 +87,7 @@ app.use(express.urlencoded({
     extended:true,
 }))
 
-// const corsOptions = {
-//   origin: 'http://localhost:3000',
-//   credentials: true,
-//   methods: ['GET', 'PATCH', 'DELETE', 'POST', 'PUT'],
-//   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
-// };
 
-// app.use(cors(corsOptions));
 
 app.use((req, res, next) => {
     // set the CORS policy
