@@ -2,6 +2,7 @@ import ErrorHandler from "../utils/eroorHandler.js";
 import Patient from "../models/patient.model.js"
 import jwt from "jsonwebtoken"
 import Doctor from "../models/doctor.model.js";
+import Admin from "../models/admin.model.js";
 export const isAuthenticated = async (req, _, next) => {
   try {
     // if(req.method==="POST"){
@@ -32,6 +33,9 @@ export const isAuthenticated = async (req, _, next) => {
     }
     else if(req.query.role==="doctor"){
       req.user = await Doctor.findById(extracted._id) ;
+    }
+    else if(req.query.role==="admin"){
+      req.user = await Admin.findById(extracted._id) ;
     }
     
     next();

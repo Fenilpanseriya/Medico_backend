@@ -11,7 +11,8 @@ import getDataUri from "../utils/dataUri.js";
 import { release } from "os";
 export const registerPatient=async(req,res,next)=>{
     try{
-        const {name,email,password,birthDate,age,phoneNumber,gender,avatar,address,file}=req.body;
+        const {name,email,password,birthDate,age,phoneNumber,gender,avatar,address}=req.body;
+        const file=req.file
         console.log(name,email,password,birthDate,age,phoneNumber,gender,address)
 
         if(!name || !email || !password || !birthDate || !age || !phoneNumber || !gender  || !address){
@@ -22,12 +23,12 @@ export const registerPatient=async(req,res,next)=>{
                 public_id:"temp",
                 url:"temp"
             }
+            // console.log(file)
             const fileUri=getDataUri(file,next);
             //console.log(fileUri);
-            //console.log(cloudinary)
-            // const {public_id,secure_url}=await cloudinary.uploader.upload(fileUri?.content);
-            // console.log("public id"+public_id)
-            const response=await Patient.create({photo:{public_id:"",url:""},name,email,password,birthDate,age,phoneNumber,gender,patientAddress:address})
+            const {public_id,secure_url}=await cloudinary.v2.uploader.upload(fileUri?.content);
+            console.log("public id"+public_id)
+            const response=await Patient.create({photo:{public_id,url:secure_url},name,email,password,birthDate,age,phoneNumber,gender,patientAddress:address})
             if(response){
                 return sendToken(res,response,"Patient registration successfully",200,next)
             }
@@ -145,11 +146,10 @@ export const patientResetPassword=async(req,res,next)=>{
     }
     
 }
-const appointmentSemaphore = new Semaphore(1);
+
 export const bookAppointment=async(req,res)=>{
     const release = await appointmentSemaphore.acquire();
     try {
-        
         const {email,phoneNumber,id,time,date}=req.body;
         console.log(email,phoneNumber,id,date);
         if(!email || !phoneNumber ||!id  || !date){
@@ -184,6 +184,9 @@ export const bookAppointment=async(req,res)=>{
         doctor.appointmentSlots.get(date).push(time);
         doctor.save(); 
 
+        // Reset the flag to indicate appointment booking is completed
+        isBookingInProgress = false;
+
         res.status(200).json({
             success:true,
             patient,
@@ -191,6 +194,7 @@ export const bookAppointment=async(req,res)=>{
         })
     } 
     catch (error) {
+        isBookingInProgress = false;
         console.log(error)
         res.status(400).json({
             success:false,
@@ -290,7 +294,7 @@ export const getUserInfo=async(req,res)=>{
             if(!user){
                 throw new ErrorHandler("user not found",400);  
             }
-            let info={photo:user.photo.url,email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate};
+            let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate};
             return res.status(200).json({
                 success: true,
                 info
@@ -301,7 +305,7 @@ export const getUserInfo=async(req,res)=>{
             if(!user){
                 throw new ErrorHandler("user not found",400);  
             }
-            let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate,experience:user.experience,doctorDegree:user.doctorDegree};
+            let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate,avatar:user.photo.url,experience:user.experience,doctorDegree:user.doctorDegree};
             return res.status(200).json({
                 success: true,
                 info
@@ -364,38 +368,3 @@ export const updateProfile=async(req,res)=>{
     }
 }
 
-export const changeProfile=async(req,res)=>{
-    try {
-
-        const {file}=req.body;
-        if(!file){
-            return res.status(400).json({
-                message:"file is required"
-            })
-        }
-        const fileUri=getDataUri(file,next);
-        console.log(fileUri);
-        
-        const {public_id,secure_url}=await cloudinary.uploader.upload(fileUri?.content);
-        console.log("public id"+public_id)
-
-        const user=await Patient.findById(req.user._id);
-        if(!user){
-            return res.status(400).json({
-                message:"user not found"
-            })
-        }
-        user.photo.public_id=public_id;
-        user.photo.url=secure_url;
-        await user.save();
-
-        return res.status(200).json({
-            success:true,
-            message:"profile has been updated successfully",
-            url:user.photo.url
-        })
-      
-    } catch (error) {
-      console.log("error is ",error.message);
-    }
-  }
