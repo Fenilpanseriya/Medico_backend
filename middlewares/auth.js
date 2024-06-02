@@ -4,6 +4,9 @@ import jwt from "jsonwebtoken"
 import Doctor from "../models/doctor.model.js";
 export const isAuthenticated = async (req, _, next) => {
   try {
+    // if(req.method==="POST"){
+    //   console.log(req.body);
+    // }
     let token;
     if (req.headers.token) {
         token = req.headers.token;

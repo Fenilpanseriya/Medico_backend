@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "type": "module",
+  "proxy":"http://localhost:6070",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
@@ -13,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async-mutex": "^0.5.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "cloudinary": "^2.1.0",
@@ -20,15 +22,21 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
+    "crypto-js": "^4.2.0",
     "datauri": "^4.1.0",
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
+    "express-http-proxy": "^2.0.0",
+    "express-rate-limit": "^7.2.0",
+    "http-proxy-middleware": "^3.0.0",
     "jsonwebtoken": "^9.0.2",
+    "kafkajs": "^2.2.4",
     "mongoose": "^8.2.0",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.10",
     "nodemon": "^3.1.0",
     "path": "^0.12.7",
+    "razorpay": "^2.9.4",
     "socket.io": "^4.7.5"
   }
 }

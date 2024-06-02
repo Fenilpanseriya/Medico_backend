@@ -3,10 +3,12 @@ import ErrorHandler from "../utils/eroorHandler.js";
 import { sendToken } from "../utils/sendToken.js";
 import { comparePassword } from "../utils/comparePassword.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import {Semaphore} from "async-mutex"
 import crypto from "crypto"
 import Doctor from "../models/doctor.model.js";
-import cloudinary from "cloudinary"
+import { cloudinary } from "../server.js";
 import getDataUri from "../utils/dataUri.js";
+import { release } from "os";
 export const registerPatient=async(req,res,next)=>{
     try{
         const {name,email,password,birthDate,age,phoneNumber,gender,avatar,address,file}=req.body;
@@ -21,10 +23,11 @@ export const registerPatient=async(req,res,next)=>{
                 url:"temp"
             }
             const fileUri=getDataUri(file,next);
-            console.log(fileUri);
-            const {public_id,secure_url}=await cloudinary.v2.uploader.upload(fileUri?.content);
-            console.log("public id"+public_id)
-            const response=await Patient.create({photo:{public_id,url:secure_url},name,email,password,birthDate,age,phoneNumber,gender,patientAddress:address})
+            //console.log(fileUri);
+            //console.log(cloudinary)
+            // const {public_id,secure_url}=await cloudinary.uploader.upload(fileUri?.content);
+            // console.log("public id"+public_id)
+            const response=await Patient.create({photo:{public_id:"",url:""},name,email,password,birthDate,age,phoneNumber,gender,patientAddress:address})
             if(response){
                 return sendToken(res,response,"Patient registration successfully",200,next)
             }
@@ -43,6 +46,7 @@ export const registerPatient=async(req,res,next)=>{
 export const loginPatient=async(req,res,next)=>{
     try{
         const {email,password}=req.body;
+        console.log("inside login")
     
         if(!email ||!password){
             return next(new ErrorHandler("please enter all fields "))
@@ -141,9 +145,11 @@ export const patientResetPassword=async(req,res,next)=>{
     }
     
 }
-
+const appointmentSemaphore = new Semaphore(1);
 export const bookAppointment=async(req,res)=>{
+    const release = await appointmentSemaphore.acquire();
     try {
+        
         const {email,phoneNumber,id,time,date}=req.body;
         console.log(email,phoneNumber,id,date);
         if(!email || !phoneNumber ||!id  || !date){
@@ -191,12 +197,16 @@ export const bookAppointment=async(req,res)=>{
             message:error.message
         })
     }
-    
+    finally{
+        release();
+    }
 
 
 }
-        
+     
+const slotCheckSemaphore = new Semaphore(1);
 export const checkSlot=async(req,res)=>{
+    const [value, release] = await slotCheckSemaphore.acquire();
     try {
         const time=req.query.time;
         const date=req.query.date;
@@ -227,6 +237,9 @@ export const checkSlot=async(req,res)=>{
             available: false,
             message: error.message
         });
+    }
+    finally{
+        release();
     }
 }
  let idToDoctorNameMap=new Map();
@@ -277,7 +290,7 @@ export const getUserInfo=async(req,res)=>{
             if(!user){
                 throw new ErrorHandler("user not found",400);  
             }
-            let info={email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate};
+            let info={photo:user.photo.url,email:user.email,name:user.name,phoneNumber:user.phoneNumber,gender:user.gender,patientAddress:user.patientAddress,birthDate:user.birthDate};
             return res.status(200).json({
                 success: true,
                 info
@@ -351,3 +364,38 @@ export const updateProfile=async(req,res)=>{
     }
 }
 
+export const changeProfile=async(req,res)=>{
+    try {
+
+        const {file}=req.body;
+        if(!file){
+            return res.status(400).json({
+                message:"file is required"
+            })
+        }
+        const fileUri=getDataUri(file,next);
+        console.log(fileUri);
+        
+        const {public_id,secure_url}=await cloudinary.uploader.upload(fileUri?.content);
+        console.log("public id"+public_id)
+
+        const user=await Patient.findById(req.user._id);
+        if(!user){
+            return res.status(400).json({
+                message:"user not found"
+            })
+        }
+        user.photo.public_id=public_id;
+        user.photo.url=secure_url;
+        await user.save();
+
+        return res.status(200).json({
+            success:true,
+            message:"profile has been updated successfully",
+            url:user.photo.url
+        })
+      
+    } catch (error) {
+      console.log("error is ",error.message);
+    }
+  }
