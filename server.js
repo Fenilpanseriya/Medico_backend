@@ -98,7 +98,7 @@ app.use((req, res, next) => {
       "Access-Control-Allow-Headers",
       "origin, X-Requested-With,Content-Type,Accept, Authorization"
     );
-    // set the CORS method headers
+    // set the CORS method header
     if (req.method === "OPTIONS") {
       res.header("Access-Control-Allow-Methods", "GET,PATCH,DELETE,POST,PUT");
       res.header("Access-Control-Allow-Origin","http://localhost:3000")
