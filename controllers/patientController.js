@@ -146,10 +146,17 @@ export const patientResetPassword=async(req,res,next)=>{
     }
     
 }
-
-export const bookAppointment=async(req,res)=>{
-    const release = await appointmentSemaphore.acquire();
+let isBookingInProgress=false
+const appointmentSemaphore = new Semaphore(1);
+export const bookAppointment=async(req,res,next)=>{
+    const [value,release] = await appointmentSemaphore.acquire();
     try {
+        if(isBookingInProgress){
+            return res.status(400).json({
+                "success":false,
+                message:"slot is already booked/booking in progress check after some time"
+            })
+        }
         const {email,phoneNumber,id,time,date}=req.body;
         console.log(email,phoneNumber,id,date);
         if(!email || !phoneNumber ||!id  || !date){
@@ -203,15 +210,17 @@ export const bookAppointment=async(req,res)=>{
     }
     finally{
         release();
+        isBookingInProgress=false;
     }
 
 
 }
-     
+
 const slotCheckSemaphore = new Semaphore(1);
 export const checkSlot=async(req,res)=>{
     const [value, release] = await slotCheckSemaphore.acquire();
     try {
+        isBookingInProgress=true;
         const time=req.query.time;
         const date=req.query.date;
         const id=req.query.id;
