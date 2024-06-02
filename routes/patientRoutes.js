@@ -6,9 +6,9 @@ import singleUpload from "../utils/multer.js";
 const router=express.Router();
 
 
-router.post("/register",singleUpload,registerPatient).post("/login",loginPatient).post("/add-report",singleUpload,isAuthenticated,addReport)
-router.get("/get-profile-info",isAuthenticated,getUserInfo).get("/total-reports",isAuthenticated,getAllReports)
+router.post("/register",singleUpload,registerPatient).post("/login",loginPatient)
+router.get("/get-profile-info",isAuthenticated,getUserInfo)
 router.get("/logoutPatient",logoutPatient).get("/checkslot",checkSlot).get("/total-appointments",isAuthenticated,getAllAppointments);
 router.post("/patientForgetPassword",patientForgetPassword).post("/patient/book-appointment",isAuthenticated,bookAppointment)
-router.put("/patientResetPassword/:token",patientResetPassword).put("/update-profile",isAuthenticated,updateProfile).put("/change-profile",isAuthenticated,singleUpload,changeProfile);
+router.put("/patientResetPassword/:token",patientResetPassword).put("/update-profile",isAuthenticated,updateProfile)
 export default router
