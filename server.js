@@ -132,7 +132,7 @@ export const kafka = new Kafka({
 await initTopics();
 await runDataService();
 const medicineProxy=proxy('http://localhost:6070')
-app.use("/hello",(res,res)=>{
+app.use("/hello",(req,res)=>{
 	res.send("hello....");
 })
 app.use("/api/v1",patient);
