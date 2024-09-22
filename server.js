@@ -110,22 +110,22 @@ app.use((req, res, next) => {
 app.use(cookieParser());
 
 app.use(cors({
-    origin:"http://localhost:3000",
+    origin:'http://localhost:3000',
     credentials:true,
     methods:["GET","DELETE","PUT","POST"]
     
 }))
-app.options("*",cors({
-    origin:"http://localhost:3000",
-    credentials:true,
-    methods:["GET","DELETE","PUT","POST"]
+// app.options("*",cors({
+//     origin:'http://localhost:3000',
+//     credentials:true,
+//     methods:["GET","DELETE","PUT","POST"]
     
-}))
+// }))
 
 
 export const kafka = new Kafka({
   clientId: 'my-app',
-  brokers: ['localhost:9092'],
+  brokers: [process.env.KAFKA_BROKER],
   
 });
 
